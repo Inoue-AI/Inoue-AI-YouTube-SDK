@@ -1,4 +1,43 @@
-# YouTube Python SDK
+# Inoue-AI YouTube SDK
+
+Multi-language SDK for the YouTube Data API v3 (and Analytics API v2 in
+Python). Ships both a Python client (under `youtube/`) and a Go client (under
+`go/`).
+
+> **Note:** This repository was renamed from `Inoue-AI/YouTube-Python-SDK` to
+> `Inoue-AI/Inoue-AI-YouTube-SDK`. GitHub auto-redirects the old URL, so
+> existing `pip install ... @ git+https://github.com/Inoue-AI/YouTube-Python-SDK.git`
+> commands continue to work. The local clone keeps the legacy directory name.
+
+## Python
+
+The Python source remains under [`youtube/`](./youtube). Install:
+
+```bash
+pip install "git+https://github.com/Inoue-AI/Inoue-AI-YouTube-SDK.git"
+```
+
+## Go
+
+The Go SDK lives under [`go/`](./go). It exposes a focused subset matching
+the calls the Inoue AI Go backend makes today (channel + uploads playlist +
+single video). Phase 3 will expand the surface as needed.
+
+```bash
+go get github.com/Inoue-AI/Inoue-AI-YouTube-SDK/go@latest
+```
+
+```go
+client := youtube.New(youtube.ClientOptions{AccessToken: "..."})
+defer client.Close()
+ch, err := client.GetChannel(ctx, youtube.GetChannelParams{Mine: true})
+```
+
+See [`go/README.md`](./go/README.md) for the full Go API.
+
+---
+
+## Original Python SDK
 
 Async Python SDK for the **YouTube Data API v3** and **YouTube Analytics API v2**.
 
