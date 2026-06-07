@@ -146,10 +146,19 @@ from youtube.models import (
     WatermarkTimingType,
     YouTubeBaseModel,
 )
+from youtube.oauth import (
+    GOOGLE_TOKEN_ENDPOINT,
+    OAuthClient,
+    TokenResponse,
+)
 
 __all__ = [
     # client
     "YouTubeClient",
+    # oauth
+    "GOOGLE_TOKEN_ENDPOINT",
+    "OAuthClient",
+    "TokenResponse",
     # exceptions
     "YouTubeAPIError",
     "YouTubeAuthError",

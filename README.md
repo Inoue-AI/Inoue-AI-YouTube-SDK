@@ -19,9 +19,14 @@ pip install "git+https://github.com/Inoue-AI/Inoue-AI-YouTube-SDK.git"
 
 ## Go
 
-The Go SDK lives under [`go/`](./go). It exposes a focused subset matching
-the calls the Inoue AI Go backend makes today (channel + uploads playlist +
-single video). Phase 3 will expand the surface as needed.
+The Go SDK lives under [`go/`](./go). It is at **parity with the core
+operations** of the Python SDK: OAuth token refresh, the main reads
+(`GetChannel`, `ListChannelVideos`, `GetVideo`, `Search`, `AnalyticsQuery`) and
+the publish/manage surface (`InsertVideo` resumable upload, `UpdateVideo`,
+`DeleteVideo`, `SetThumbnail`). Exhaustive 1:1 coverage of every Data-API
+endpoint (playlists, comments, subscriptions, captions, channel sections,
+banners, watermarks) is iterated as needed — see `go/README.md` for the
+core-vs-deferred breakdown.
 
 ```bash
 go get github.com/Inoue-AI/Inoue-AI-YouTube-SDK/go@latest
@@ -281,7 +286,7 @@ async with YouTubeClient(access_token="TOKEN") as yt:
 
 ## Authentication
 
-The SDK does **not** handle OAuth flows. You must provide a pre-obtained token:
+The `YouTubeClient` consumes a pre-obtained token:
 
 - **`access_token`** — OAuth 2.0 token for full read/write access
 - **`api_key`** — Google API key for read-only public data
@@ -296,6 +301,31 @@ client = YouTubeClient(api_key="AIzaSy...")
 # Both (OAuth takes priority, API key added to all requests)
 client = YouTubeClient(access_token="ya29....", api_key="AIzaSy...")
 ```
+
+### Refreshing an expired access token
+
+The SDK does not drive the interactive authorization-code redirect flow (that
+belongs to the frontend), but a long-running backend can exchange a stored
+refresh token for a fresh access token via `OAuthClient`. Credentials are
+read from the environment — never hardcode the client secret.
+
+```python
+import os
+from youtube import OAuthClient, YouTubeClient
+
+async with OAuthClient(
+    client_id=os.environ["YT_OAUTH_CLIENT_ID"],
+    client_secret=os.environ["YT_OAUTH_CLIENT_SECRET"],
+) as oauth:
+    token = await oauth.refresh_access_token(os.environ["YT_REFRESH_TOKEN"])
+
+async with YouTubeClient(access_token=token.access_token) as yt:
+    ...
+```
+
+`OAuthClient.exchange_authorization_code(code, redirect_uri, code_verifier=...)`
+is also provided so a backend that receives the OAuth redirect callback can
+complete the code exchange (with optional PKCE).
 
 ## Development
 

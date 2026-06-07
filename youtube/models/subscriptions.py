@@ -14,6 +14,7 @@ from youtube.models.common import PageInfo, ResourceId, ThumbnailDetails
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class SubscriptionPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -34,6 +35,7 @@ class SubscriptionOrder(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class SubscriptionSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a Subscription resource."""
@@ -66,6 +68,7 @@ class SubscriberSnippet(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class Subscription(YouTubeBaseModel):
     """A YouTube Subscription resource."""

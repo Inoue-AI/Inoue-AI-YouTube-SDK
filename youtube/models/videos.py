@@ -19,6 +19,7 @@ from youtube.models.common import (
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class VideoPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -65,6 +66,7 @@ class Rating(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class VideoSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a Video resource."""
@@ -158,6 +160,7 @@ class VideoLiveStreamingDetails(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class Video(YouTubeBaseModel):
     """A YouTube Video resource.

@@ -12,9 +12,11 @@ Reference: https://developers.google.com/youtube/v3/docs/channelSections
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL
 from youtube.models.channel_sections import (
     ChannelSection,
@@ -31,17 +33,17 @@ class ChannelSectionsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[ChannelSectionPart],
+        parts: Sequence[ChannelSectionPart],
         channel_id: str | None = None,
-        id: str | list[str] | None = None,
+        id: str | Sequence[str] | None = None,
         mine: bool | None = None,
     ) -> ChannelSectionListResponse:
         """Return channel sections matching the given filter."""
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         if channel_id is not None:
             params["channelId"] = channel_id
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if mine is not None:
             params["mine"] = str(mine).lower()
 
@@ -52,13 +54,13 @@ class ChannelSectionsAPI(BaseAPI):
         self,
         body: ChannelSection,
         *,
-        parts: list[ChannelSectionPart] | None = None,
+        parts: Sequence[ChannelSectionPart] | None = None,
     ) -> ChannelSection:
         """Create a new channel section (max 10 per channel)."""
         if parts is None:
             parts = _infer_parts(body)
 
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.post(
             f"{_BASE}/channelSections",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -70,13 +72,13 @@ class ChannelSectionsAPI(BaseAPI):
         self,
         body: ChannelSection,
         *,
-        parts: list[ChannelSectionPart] | None = None,
+        parts: Sequence[ChannelSectionPart] | None = None,
     ) -> ChannelSection:
         """Update an existing channel section."""
         if parts is None:
             parts = _infer_parts(body)
 
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.put(
             f"{_BASE}/channelSections",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -87,10 +89,6 @@ class ChannelSectionsAPI(BaseAPI):
     async def delete(self, *, id: str) -> None:
         """Delete a channel section."""
         await self._session.delete(f"{_BASE}/channelSections", params={"id": id})
-
-
-def _join(parts: list[ChannelSectionPart]) -> str:
-    return ",".join(p.value for p in parts)
 
 
 def _infer_parts(body: ChannelSection) -> list[ChannelSectionPart]:

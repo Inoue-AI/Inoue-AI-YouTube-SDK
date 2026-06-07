@@ -11,6 +11,7 @@ class YouTubeSDKError(Exception):
 # API-level errors (YouTube returned an error payload)
 # ---------------------------------------------------------------------------
 
+
 class YouTubeAPIError(YouTubeSDKError):
     """The YouTube API responded with an error.
 
@@ -70,6 +71,7 @@ class YouTubeServerError(YouTubeAPIError):
 # ---------------------------------------------------------------------------
 # Client / transport-level errors
 # ---------------------------------------------------------------------------
+
 
 class YouTubeUploadError(YouTubeSDKError):
     """Raised when a file upload to YouTube fails."""

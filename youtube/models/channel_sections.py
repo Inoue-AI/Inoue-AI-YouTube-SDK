@@ -14,6 +14,7 @@ from youtube.models.common import Localization
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class ChannelSectionPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -41,6 +42,7 @@ class ChannelSectionType(StrEnum):
 # Nested resource parts
 # ---------------------------------------------------------------------------
 
+
 class ChannelSectionSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a ChannelSection resource."""
 
@@ -62,6 +64,7 @@ class ChannelSectionContentDetails(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class ChannelSection(YouTubeBaseModel):
     """A YouTube ChannelSection resource."""

@@ -9,7 +9,7 @@ Reference: https://developers.google.com/youtube/v3/docs/search/list
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
@@ -38,7 +38,7 @@ class SearchAPI(BaseAPI):
         self,
         *,
         q: str | None = None,
-        type: list[SearchResultType] | SearchResultType | None = None,
+        type: Sequence[SearchResultType] | SearchResultType | None = None,
         channel_id: str | None = None,
         for_mine: bool | None = None,
         order: SearchOrder | None = None,
@@ -70,10 +70,10 @@ class SearchAPI(BaseAPI):
         if q is not None:
             params["q"] = q
         if type is not None:
-            if isinstance(type, list):
-                params["type"] = ",".join(t.value for t in type)
-            else:
+            if isinstance(type, SearchResultType):
                 params["type"] = type.value
+            else:
+                params["type"] = ",".join(t.value for t in type)
         if channel_id is not None:
             params["channelId"] = channel_id
         if for_mine is not None:
@@ -118,7 +118,7 @@ class SearchAPI(BaseAPI):
         self,
         *,
         q: str | None = None,
-        type: list[SearchResultType] | SearchResultType | None = None,
+        type: Sequence[SearchResultType] | SearchResultType | None = None,
         channel_id: str | None = None,
         order: SearchOrder | None = None,
         max_results: int = 25,

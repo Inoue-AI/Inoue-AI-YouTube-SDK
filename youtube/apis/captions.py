@@ -13,9 +13,11 @@ Reference: https://developers.google.com/youtube/v3/docs/captions
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL, YOUTUBE_UPLOAD_BASE_URL
 from youtube.models.captions import (
     Caption,
@@ -34,17 +36,17 @@ class CaptionsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[CaptionPart],
+        parts: Sequence[CaptionPart],
         video_id: str,
-        id: str | list[str] | None = None,
+        id: str | Sequence[str] | None = None,
     ) -> CaptionListResponse:
         """Return caption tracks for a video."""
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "videoId": video_id,
         }
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
 
         payload = await self._session.get(f"{_BASE}/captions", params=params)
         return CaptionListResponse.model_validate(payload)
@@ -54,7 +56,7 @@ class CaptionsAPI(BaseAPI):
         body: Caption,
         caption_data: bytes,
         *,
-        parts: list[CaptionPart] | None = None,
+        parts: Sequence[CaptionPart] | None = None,
         content_type: str = "application/octet-stream",
     ) -> Caption:
         """Upload a new caption track.
@@ -63,7 +65,7 @@ class CaptionsAPI(BaseAPI):
         ``snippet.language``, and ``snippet.name``.
         """
         parts = parts or [CaptionPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         metadata = body.model_dump(by_alias=True, exclude_none=True)
         payload = await self._session.upload_multipart(
             f"{_UPLOAD}/captions",
@@ -79,7 +81,7 @@ class CaptionsAPI(BaseAPI):
         body: Caption,
         file_path: str,
         *,
-        parts: list[CaptionPart] | None = None,
+        parts: Sequence[CaptionPart] | None = None,
         content_type: str = "application/octet-stream",
     ) -> Caption:
         """Upload a new caption track from a local file."""
@@ -97,7 +99,7 @@ class CaptionsAPI(BaseAPI):
         body: Caption,
         caption_data: bytes | None = None,
         *,
-        parts: list[CaptionPart] | None = None,
+        parts: Sequence[CaptionPart] | None = None,
         content_type: str = "application/octet-stream",
     ) -> Caption:
         """Update an existing caption track.
@@ -106,7 +108,7 @@ class CaptionsAPI(BaseAPI):
         Otherwise only the metadata (e.g. ``is_draft``) is updated.
         """
         parts = parts or [CaptionPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         metadata = body.model_dump(by_alias=True, exclude_none=True)
 
         if caption_data is not None:
@@ -158,7 +160,3 @@ class CaptionsAPI(BaseAPI):
     async def delete(self, *, id: str) -> None:
         """Delete a caption track."""
         await self._session.delete(f"{_BASE}/captions", params={"id": id})
-
-
-def _join(parts: list[CaptionPart]) -> str:
-    return ",".join(p.value for p in parts)

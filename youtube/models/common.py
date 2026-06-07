@@ -12,6 +12,7 @@ from youtube.models.base import YouTubeBaseModel
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class PrivacyStatus(StrEnum):
     """Visibility setting for videos, playlists, and other resources."""
 
@@ -23,6 +24,7 @@ class PrivacyStatus(StrEnum):
 # ---------------------------------------------------------------------------
 # Shared resource types
 # ---------------------------------------------------------------------------
+
 
 class Thumbnail(YouTubeBaseModel):
     """A single thumbnail image."""

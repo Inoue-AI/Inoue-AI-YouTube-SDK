@@ -14,10 +14,11 @@ Reference: https://developers.google.com/youtube/v3/docs/videos
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL, YOUTUBE_UPLOAD_BASE_URL
 from youtube.models.videos import (
     Rating,
@@ -41,8 +42,8 @@ class VideosAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[VideoPart],
-        id: str | list[str] | None = None,
+        parts: Sequence[VideoPart],
+        id: str | Sequence[str] | None = None,
         chart: str | None = None,
         my_rating: str | None = None,
         max_results: int = 5,
@@ -56,11 +57,11 @@ class VideosAPI(BaseAPI):
         Exactly one of ``id``, ``chart``, or ``my_rating`` must be provided.
         """
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "maxResults": max_results,
         }
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if chart is not None:
             params["chart"] = chart
         if my_rating is not None:
@@ -80,7 +81,7 @@ class VideosAPI(BaseAPI):
     async def iter_by_chart(
         self,
         *,
-        parts: list[VideoPart],
+        parts: Sequence[VideoPart],
         chart: str = "mostPopular",
         max_results: int = 5,
         region_code: str | None = None,
@@ -112,7 +113,7 @@ class VideosAPI(BaseAPI):
         body: Video,
         file_path: str,
         *,
-        parts: list[VideoPart] | None = None,
+        parts: Sequence[VideoPart] | None = None,
         notify_subscribers: bool = True,
     ) -> Video:
         """Upload a video file to YouTube.
@@ -125,7 +126,7 @@ class VideosAPI(BaseAPI):
         if parts is None:
             parts = _infer_parts(body)
 
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         if not notify_subscribers:
             params["notifySubscribers"] = "false"
 
@@ -152,7 +153,7 @@ class VideosAPI(BaseAPI):
         self,
         body: Video,
         *,
-        parts: list[VideoPart] | None = None,
+        parts: Sequence[VideoPart] | None = None,
     ) -> Video:
         """Update a video's metadata.
 
@@ -161,7 +162,7 @@ class VideosAPI(BaseAPI):
         if parts is None:
             parts = _infer_parts(body)
 
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.put(
             f"{_BASE}/videos",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -191,10 +192,10 @@ class VideosAPI(BaseAPI):
     async def get_rating(
         self,
         *,
-        id: str | list[str],
+        id: str | Sequence[str],
     ) -> VideoGetRatingResponse:
         """Retrieve the authenticated user's rating for one or more videos."""
-        video_ids = ",".join(id) if isinstance(id, list) else id
+        video_ids = join_ids(id)
         payload = await self._session.get(
             f"{_BASE}/videos/getRating",
             params={"id": video_ids},
@@ -231,9 +232,6 @@ class VideosAPI(BaseAPI):
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
-
-def _join(parts: list[VideoPart]) -> str:
-    return ",".join(p.value for p in parts)
 
 
 def _infer_parts(body: Video) -> list[VideoPart]:

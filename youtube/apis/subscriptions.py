@@ -11,10 +11,11 @@ Reference: https://developers.google.com/youtube/v3/docs/subscriptions
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL
 from youtube.models.subscriptions import (
     Subscription,
@@ -32,9 +33,9 @@ class SubscriptionsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[SubscriptionPart],
+        parts: Sequence[SubscriptionPart],
         channel_id: str | None = None,
-        id: str | list[str] | None = None,
+        id: str | Sequence[str] | None = None,
         mine: bool | None = None,
         my_recent_subscribers: bool | None = None,
         my_subscribers: bool | None = None,
@@ -45,13 +46,13 @@ class SubscriptionsAPI(BaseAPI):
     ) -> SubscriptionListResponse:
         """Return a list of subscriptions matching the given filter."""
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "maxResults": max_results,
         }
         if channel_id is not None:
             params["channelId"] = channel_id
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if mine is not None:
             params["mine"] = str(mine).lower()
         if my_recent_subscribers is not None:
@@ -71,7 +72,7 @@ class SubscriptionsAPI(BaseAPI):
     async def iter_mine(
         self,
         *,
-        parts: list[SubscriptionPart],
+        parts: Sequence[SubscriptionPart],
         max_results: int = 50,
         order: SubscriptionOrder | None = None,
     ) -> AsyncIterator[Subscription]:
@@ -95,7 +96,7 @@ class SubscriptionsAPI(BaseAPI):
         self,
         body: Subscription,
         *,
-        parts: list[SubscriptionPart] | None = None,
+        parts: Sequence[SubscriptionPart] | None = None,
     ) -> Subscription:
         """Subscribe to a channel.
 
@@ -103,7 +104,7 @@ class SubscriptionsAPI(BaseAPI):
         ``kind="youtube#channel"`` and the target ``channel_id``.
         """
         parts = parts or [SubscriptionPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.post(
             f"{_BASE}/subscriptions",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -114,7 +115,3 @@ class SubscriptionsAPI(BaseAPI):
     async def delete(self, *, id: str) -> None:
         """Unsubscribe (delete a subscription by its ID)."""
         await self._session.delete(f"{_BASE}/subscriptions", params={"id": id})
-
-
-def _join(parts: list[SubscriptionPart]) -> str:
-    return ",".join(p.value for p in parts)

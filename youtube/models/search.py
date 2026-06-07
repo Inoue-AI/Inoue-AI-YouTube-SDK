@@ -14,6 +14,7 @@ from youtube.models.common import PageInfo, ResourceId, ThumbnailDetails
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class SearchPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -100,6 +101,7 @@ class VideoType(StrEnum):
 # Nested resource parts
 # ---------------------------------------------------------------------------
 
+
 class SearchResultSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a SearchResult resource."""
 
@@ -115,6 +117,7 @@ class SearchResultSnippet(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class SearchResult(YouTubeBaseModel):
     """A single search result.

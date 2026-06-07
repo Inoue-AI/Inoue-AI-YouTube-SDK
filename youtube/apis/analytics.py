@@ -88,9 +88,7 @@ class AnalyticsAPI(BaseAPI):
         if currency is not None:
             params["currency"] = currency
         if include_historical_channel_data is not None:
-            params["includeHistoricalChannelData"] = str(
-                include_historical_channel_data
-            ).lower()
+            params["includeHistoricalChannelData"] = str(include_historical_channel_data).lower()
 
         payload = await self._session.get(f"{_BASE}/reports", params=params)
         return AnalyticsResponse.model_validate(payload)

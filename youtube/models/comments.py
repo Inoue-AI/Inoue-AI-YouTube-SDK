@@ -14,6 +14,7 @@ from youtube.models.common import PageInfo
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class CommentPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -39,6 +40,7 @@ class TextFormat(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class AuthorChannelId(YouTubeBaseModel):
     """Wrapper for the author's channel ID inside a comment snippet."""
@@ -69,6 +71,7 @@ class CommentSnippet(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class Comment(YouTubeBaseModel):
     """A YouTube Comment resource."""

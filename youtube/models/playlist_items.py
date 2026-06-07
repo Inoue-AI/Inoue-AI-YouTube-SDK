@@ -19,6 +19,7 @@ from youtube.models.common import (
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class PlaylistItemPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -31,6 +32,7 @@ class PlaylistItemPart(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class PlaylistItemSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a PlaylistItem resource."""
@@ -65,6 +67,7 @@ class PlaylistItemStatus(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class PlaylistItem(YouTubeBaseModel):
     """A YouTube PlaylistItem resource."""

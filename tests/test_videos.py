@@ -74,6 +74,7 @@ SAMPLE_GET_RATING_RESPONSE = {
 # Model tests
 # ---------------------------------------------------------------------------
 
+
 class TestVideoModels:
     """Tests for Pydantic video models."""
 
@@ -156,6 +157,7 @@ class TestVideoModels:
 # ---------------------------------------------------------------------------
 # API tests
 # ---------------------------------------------------------------------------
+
 
 class TestVideosAPI:
     """Tests for the VideosAPI methods with mocked HTTP."""

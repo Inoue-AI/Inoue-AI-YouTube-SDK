@@ -119,11 +119,11 @@ type ChannelVideo struct {
 	Etag    string `json:"etag"`
 	ID      string `json:"id"`
 	Snippet struct {
-		PublishedAt  string `json:"publishedAt"`
-		ChannelID    string `json:"channelId"`
-		Title        string `json:"title"`
-		Description  string `json:"description"`
-		ResourceID   struct {
+		PublishedAt string `json:"publishedAt"`
+		ChannelID   string `json:"channelId"`
+		Title       string `json:"title"`
+		Description string `json:"description"`
+		ResourceID  struct {
 			Kind    string `json:"kind"`
 			VideoID string `json:"videoId"`
 		} `json:"resourceId"`

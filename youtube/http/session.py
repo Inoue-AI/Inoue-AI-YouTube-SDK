@@ -76,12 +76,18 @@ class YouTubeSession:
     # Auth helpers
     # ------------------------------------------------------------------
 
-    def _inject_key(self, params: dict[str, Any] | None) -> dict[str, Any] | None:
-        """Append ``key=<api_key>`` to query params when an API key is set."""
+    def _inject_key(self, params: dict[str, Any] | None) -> dict[str, Any]:
+        """Return a query-param dict with ``key=<api_key>`` appended if set.
+
+        Always returns a concrete dict (never ``None``) so the request and
+        upload helpers can reassign their local ``params`` without widening the
+        type. An empty dict is equivalent to ``None`` for the underlying
+        aiohttp request, so callers lose nothing when no params were supplied.
+        """
+        merged: dict[str, Any] = dict(params) if params else {}
         if self._api_key:
-            params = dict(params) if params else {}
-            params["key"] = self._api_key
-        return params
+            merged["key"] = self._api_key
+        return merged
 
     # ------------------------------------------------------------------
     # Public request methods

@@ -15,6 +15,7 @@ from youtube.models.common import PageInfo
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class CommentThreadPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -33,6 +34,7 @@ class CommentThreadOrder(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class CommentThreadSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a CommentThread resource."""
@@ -58,6 +60,7 @@ class CommentThreadReplies(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class CommentThread(YouTubeBaseModel):
     """A YouTube CommentThread resource."""

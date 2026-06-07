@@ -15,6 +15,7 @@ from youtube.models.base import YouTubeBaseModel
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class CaptionPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -53,6 +54,7 @@ class CaptionFormat(StrEnum):
 # Nested resource parts
 # ---------------------------------------------------------------------------
 
+
 class CaptionSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a Caption resource."""
 
@@ -72,6 +74,7 @@ class CaptionSnippet(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class Caption(YouTubeBaseModel):
     """A YouTube Caption resource."""

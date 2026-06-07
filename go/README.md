@@ -1,7 +1,9 @@
 # YouTube Go SDK
 
-Typed, context-aware Go client for the YouTube Data API v3 (read paths only,
-focused subset).
+Typed, context-aware Go client for the YouTube Data API v3 and the YouTube
+Analytics API v2, at parity with the **core operations** of the Python SDK:
+OAuth token refresh, the main reads, and the publish/manage surface
+(resumable video upload, update, delete, thumbnail set).
 
 ## Install
 
@@ -42,14 +44,53 @@ func main() {
 
 ## Methods
 
+### OAuth (`*OAuthClient`)
+
+| Go method | OAuth grant |
+|---|---|
+| `RefreshAccessToken(ctx, refreshToken)` | `grant_type=refresh_token` |
+| `ExchangeAuthorizationCode(ctx, code, redirectURI, codeVerifier)` | `grant_type=authorization_code` (+ optional PKCE) |
+
+```go
+oauth, _ := youtube.NewOAuthClient(youtube.OAuthOptions{
+    ClientID:     os.Getenv("YT_OAUTH_CLIENT_ID"),
+    ClientSecret: os.Getenv("YT_OAUTH_CLIENT_SECRET"),
+})
+defer oauth.Close()
+tok, err := oauth.RefreshAccessToken(ctx, os.Getenv("YT_REFRESH_TOKEN"))
+// tok.AccessToken -> youtube.New(youtube.ClientOptions{AccessToken: tok.AccessToken})
+```
+
+### Reads (`*Client`)
+
+| Go method | YouTube endpoint | Auth |
+|---|---|---|
+| `GetChannel(ctx, params)` | `GET /channels` | OAuth or API key |
+| `ListChannelVideos(ctx, params)` | `GET /playlistItems?playlistId=<uploads>` | OAuth or API key |
+| `GetVideo(ctx, id, parts)` | `GET /videos` | OAuth or API key |
+| `Search(ctx, params)` | `GET /search` | OAuth or API key |
+| `AnalyticsQuery(ctx, params)` | `GET /reports` (Analytics API) | OAuth only |
+
+### Publish / manage (`*Client`, OAuth only)
+
 | Go method | YouTube endpoint |
 |---|---|
-| `GetChannel(ctx, params)` | `GET /channels` |
-| `ListChannelVideos(ctx, params)` | `GET /playlistItems?playlistId=<uploads>` |
-| `GetVideo(ctx, id, parts)` | `GET /videos` |
+| `InsertVideo(ctx, params)` | `POST /upload/videos` (resumable, chunked) |
+| `UpdateVideo(ctx, metadata, parts)` | `PUT /videos` |
+| `DeleteVideo(ctx, videoID)` | `DELETE /videos` |
+| `SetThumbnail(ctx, params)` | `POST /upload/thumbnails/set` (direct media) |
 
 For unauthenticated access to public data, supply `APIKey` instead of
-`AccessToken` in `ClientOptions`.
+`AccessToken` in `ClientOptions`. Write, upload, and Analytics endpoints
+reject API-key-only auth and require an `AccessToken`.
+
+### Resumable upload
+
+`InsertVideo` implements the two-phase resumable protocol: a session-init
+`POST` (advertising `X-Upload-Content-Length`), followed by chunked `PUT`s that
+honor the `308 Resume Incomplete` response and stream from any `io.Reader`.
+`MediaSize` must be supplied so the total length is known up front; `ChunkSize`
+defaults to 8 MiB.
 
 ## Operating principles
 

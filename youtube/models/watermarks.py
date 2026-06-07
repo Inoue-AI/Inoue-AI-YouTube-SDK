@@ -13,6 +13,7 @@ from youtube.models.base import YouTubeBaseModel
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class WatermarkTimingType(StrEnum):
     """When the watermark appears relative to the video."""
 
@@ -32,6 +33,7 @@ class WatermarkCornerPosition(StrEnum):
 # ---------------------------------------------------------------------------
 # Resource parts
 # ---------------------------------------------------------------------------
+
 
 class WatermarkTiming(YouTubeBaseModel):
     """Timing configuration for a watermark."""

@@ -19,6 +19,7 @@ from youtube.models.common import (
 # Enumerations
 # ---------------------------------------------------------------------------
 
+
 class ChannelPart(StrEnum):
     """Resource parts accepted by the ``part`` parameter."""
 
@@ -35,6 +36,7 @@ class ChannelPart(StrEnum):
 # ---------------------------------------------------------------------------
 # Nested resource parts
 # ---------------------------------------------------------------------------
+
 
 class ChannelSnippet(YouTubeBaseModel):
     """The ``snippet`` part of a Channel resource."""
@@ -116,6 +118,7 @@ class ChannelBrandingSettings(YouTubeBaseModel):
 # ---------------------------------------------------------------------------
 # Top-level resource & list response
 # ---------------------------------------------------------------------------
+
 
 class Channel(YouTubeBaseModel):
     """A YouTube Channel resource."""

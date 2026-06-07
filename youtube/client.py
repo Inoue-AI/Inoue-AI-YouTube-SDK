@@ -91,9 +91,7 @@ class YouTubeClient:
         timeout: float = DEFAULT_TIMEOUT,
     ) -> None:
         if not access_token and not api_key:
-            raise YouTubeConfigError(
-                "At least one of access_token or api_key must be provided."
-            )
+            raise YouTubeConfigError("At least one of access_token or api_key must be provided.")
 
         self._session = YouTubeSession(
             access_token=access_token,

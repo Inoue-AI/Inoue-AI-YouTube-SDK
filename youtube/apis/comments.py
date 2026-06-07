@@ -13,10 +13,11 @@ Reference: https://developers.google.com/youtube/v3/docs/comments
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL
 from youtube.models.comments import (
     Comment,
@@ -35,8 +36,8 @@ class CommentsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[CommentPart],
-        id: str | list[str] | None = None,
+        parts: Sequence[CommentPart],
+        id: str | Sequence[str] | None = None,
         parent_id: str | None = None,
         max_results: int = 20,
         page_token: str | None = None,
@@ -47,11 +48,11 @@ class CommentsAPI(BaseAPI):
         Use ``parent_id`` to retrieve replies to a specific comment.
         """
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "maxResults": max_results,
         }
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if parent_id is not None:
             params["parentId"] = parent_id
         if page_token is not None:
@@ -66,7 +67,7 @@ class CommentsAPI(BaseAPI):
         self,
         parent_id: str,
         *,
-        parts: list[CommentPart],
+        parts: Sequence[CommentPart],
         max_results: int = 100,
     ) -> AsyncIterator[Comment]:
         """Async generator that pages through all replies to a comment."""
@@ -88,7 +89,7 @@ class CommentsAPI(BaseAPI):
         self,
         body: Comment,
         *,
-        parts: list[CommentPart] | None = None,
+        parts: Sequence[CommentPart] | None = None,
     ) -> Comment:
         """Post a reply to an existing comment.
 
@@ -98,7 +99,7 @@ class CommentsAPI(BaseAPI):
         Note: use ``comment_threads.insert`` for top-level comments.
         """
         parts = parts or [CommentPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.post(
             f"{_BASE}/comments",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -110,14 +111,14 @@ class CommentsAPI(BaseAPI):
         self,
         body: Comment,
         *,
-        parts: list[CommentPart] | None = None,
+        parts: Sequence[CommentPart] | None = None,
     ) -> Comment:
         """Update an existing comment's text.
 
         The ``body`` must include ``id`` and ``snippet.text_original``.
         """
         parts = parts or [CommentPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.put(
             f"{_BASE}/comments",
             json=body.model_dump(by_alias=True, exclude_none=True),
@@ -132,12 +133,12 @@ class CommentsAPI(BaseAPI):
     async def set_moderation_status(
         self,
         *,
-        id: str | list[str],
+        id: str | Sequence[str],
         moderation_status: ModerationStatus,
         ban_author: bool = False,
     ) -> None:
         """Set the moderation status of one or more comments."""
-        comment_ids = ",".join(id) if isinstance(id, list) else id
+        comment_ids = join_ids(id)
         params: dict[str, Any] = {
             "id": comment_ids,
             "moderationStatus": moderation_status.value,
@@ -148,7 +149,3 @@ class CommentsAPI(BaseAPI):
             f"{_BASE}/comments/setModerationStatus",
             params=params,
         )
-
-
-def _join(parts: list[CommentPart]) -> str:
-    return ",".join(p.value for p in parts)

@@ -10,10 +10,11 @@ Reference: https://developers.google.com/youtube/v3/docs/commentThreads
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL
 from youtube.models.comment_threads import (
     CommentThread,
@@ -32,10 +33,10 @@ class CommentThreadsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[CommentThreadPart],
+        parts: Sequence[CommentThreadPart],
         video_id: str | None = None,
         channel_id: str | None = None,
-        id: str | list[str] | None = None,
+        id: str | Sequence[str] | None = None,
         all_threads_related_to_channel_id: str | None = None,
         max_results: int = 20,
         page_token: str | None = None,
@@ -50,7 +51,7 @@ class CommentThreadsAPI(BaseAPI):
         ``all_threads_related_to_channel_id`` must be provided.
         """
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "maxResults": max_results,
         }
         if video_id is not None:
@@ -58,7 +59,7 @@ class CommentThreadsAPI(BaseAPI):
         if channel_id is not None:
             params["channelId"] = channel_id
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if all_threads_related_to_channel_id is not None:
             params["allThreadsRelatedToChannelId"] = all_threads_related_to_channel_id
         if page_token is not None:
@@ -79,7 +80,7 @@ class CommentThreadsAPI(BaseAPI):
         self,
         video_id: str,
         *,
-        parts: list[CommentThreadPart],
+        parts: Sequence[CommentThreadPart],
         max_results: int = 100,
         order: CommentThreadOrder | None = None,
     ) -> AsyncIterator[CommentThread]:
@@ -103,7 +104,7 @@ class CommentThreadsAPI(BaseAPI):
         self,
         body: CommentThread,
         *,
-        parts: list[CommentThreadPart] | None = None,
+        parts: Sequence[CommentThreadPart] | None = None,
     ) -> CommentThread:
         """Post a new top-level comment on a video.
 
@@ -112,14 +113,10 @@ class CommentThreadsAPI(BaseAPI):
         ``snippet.top_level_comment.snippet.text_original``.
         """
         parts = parts or [CommentThreadPart.SNIPPET]
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.post(
             f"{_BASE}/commentThreads",
             json=body.model_dump(by_alias=True, exclude_none=True),
             params=params,
         )
         return CommentThread.model_validate(payload)
-
-
-def _join(parts: list[CommentThreadPart]) -> str:
-    return ",".join(p.value for p in parts)

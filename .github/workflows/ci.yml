@@ -88,6 +88,39 @@ jobs:
           files: coverage.xml
           fail_ci_if_error: false
 
+  go:
+    name: Go (build · vet · test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          # The module has no third-party dependencies (stdlib only), so there
+          # is no go.sum; disable module caching to avoid a missing-file warning.
+          cache: false
+
+      - name: gofmt check
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files are not gofmt-clean:"; echo "$unformatted"; exit 1
+          fi
+
+      - name: Build
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test (race + coverage)
+        run: go test -race -count=1 -coverprofile=coverage.out ./...
+
   docker-build:
     name: Docker build check
     runs-on: ubuntu-latest

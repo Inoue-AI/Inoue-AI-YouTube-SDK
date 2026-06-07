@@ -10,9 +10,11 @@ Reference: https://developers.google.com/youtube/v3/docs/channels
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from youtube.apis.base import BaseAPI
+from youtube.apis.params import join_ids, join_parts
 from youtube.config import YOUTUBE_API_BASE_URL
 from youtube.models.channels import (
     Channel,
@@ -29,8 +31,8 @@ class ChannelsAPI(BaseAPI):
     async def list(
         self,
         *,
-        parts: list[ChannelPart],
-        id: str | list[str] | None = None,
+        parts: Sequence[ChannelPart],
+        id: str | Sequence[str] | None = None,
         for_handle: str | None = None,
         for_username: str | None = None,
         mine: bool | None = None,
@@ -45,11 +47,11 @@ class ChannelsAPI(BaseAPI):
         or ``managed_by_me`` must be provided.
         """
         params: dict[str, Any] = {
-            "part": _join(parts),
+            "part": join_parts(parts),
             "maxResults": max_results,
         }
         if id is not None:
-            params["id"] = ",".join(id) if isinstance(id, list) else id
+            params["id"] = join_ids(id)
         if for_handle is not None:
             params["forHandle"] = for_handle
         if for_username is not None:
@@ -70,7 +72,7 @@ class ChannelsAPI(BaseAPI):
         self,
         body: Channel,
         *,
-        parts: list[ChannelPart] | None = None,
+        parts: Sequence[ChannelPart] | None = None,
     ) -> Channel:
         """Update a channel's metadata.
 
@@ -84,17 +86,13 @@ class ChannelsAPI(BaseAPI):
         if parts is None:
             parts = _infer_parts(body)
 
-        params: dict[str, Any] = {"part": _join(parts)}
+        params: dict[str, Any] = {"part": join_parts(parts)}
         payload = await self._session.put(
             f"{_BASE}/channels",
             json=body.model_dump(by_alias=True, exclude_none=True),
             params=params,
         )
         return Channel.model_validate(payload)
-
-
-def _join(parts: list[ChannelPart]) -> str:
-    return ",".join(p.value for p in parts)
 
 
 def _infer_parts(body: Channel) -> list[ChannelPart]:
