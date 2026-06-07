@@ -1,9 +1,13 @@
 # YouTube Go SDK
 
 Typed, context-aware Go client for the YouTube Data API v3 and the YouTube
-Analytics API v2, at parity with the **core operations** of the Python SDK:
-OAuth token refresh, the main reads, and the publish/manage surface
-(resumable video upload, update, delete, thumbnail set).
+Analytics API v2, at **full parity** with the Python SDK: OAuth token refresh,
+every read, the complete write/manage surface (resumable video upload, all CRUD
+endpoints, captions multipart upload, banner/thumbnail/watermark binary uploads,
+comment moderation, ratings, abuse reports), and cursor-walking iterators.
+
+Operations are flat methods on `*Client`, named `<Resource><Verb>` (e.g.
+`ListPlaylists`, `InsertCaption`, `RateVideo`).
 
 ## Install
 
@@ -61,24 +65,49 @@ tok, err := oauth.RefreshAccessToken(ctx, os.Getenv("YT_REFRESH_TOKEN"))
 // tok.AccessToken -> youtube.New(youtube.ClientOptions{AccessToken: tok.AccessToken})
 ```
 
-### Reads (`*Client`)
-
-| Go method | YouTube endpoint | Auth |
-|---|---|---|
-| `GetChannel(ctx, params)` | `GET /channels` | OAuth or API key |
-| `ListChannelVideos(ctx, params)` | `GET /playlistItems?playlistId=<uploads>` | OAuth or API key |
-| `GetVideo(ctx, id, parts)` | `GET /videos` | OAuth or API key |
-| `Search(ctx, params)` | `GET /search` | OAuth or API key |
-| `AnalyticsQuery(ctx, params)` | `GET /reports` (Analytics API) | OAuth only |
-
-### Publish / manage (`*Client`, OAuth only)
+### Reads (`*Client`, OAuth or API key)
 
 | Go method | YouTube endpoint |
 |---|---|
-| `InsertVideo(ctx, params)` | `POST /upload/videos` (resumable, chunked) |
-| `UpdateVideo(ctx, metadata, parts)` | `PUT /videos` |
-| `DeleteVideo(ctx, videoID)` | `DELETE /videos` |
-| `SetThumbnail(ctx, params)` | `POST /upload/thumbnails/set` (direct media) |
+| `ListChannels(ctx, params)` / `GetChannel(ctx, params)` | `GET /channels` |
+| `ListChannelVideos(ctx, params)` | `GET /playlistItems?playlistId=<uploads>` |
+| `ListChannelSections(ctx, params)` | `GET /channelSections` |
+| `ListVideos(ctx, params)` / `GetVideo(ctx, id, parts)` | `GET /videos` |
+| `ListPlaylists(ctx, params)` | `GET /playlists` |
+| `ListPlaylistItems(ctx, params)` | `GET /playlistItems` |
+| `ListComments(ctx, params)` | `GET /comments` |
+| `ListCommentThreads(ctx, params)` | `GET /commentThreads` |
+| `ListSubscriptions(ctx, params)` | `GET /subscriptions` |
+| `ListCaptions(ctx, params)` | `GET /captions` |
+| `DownloadCaption(ctx, params)` | `GET /captions/{id}` (binary) |
+| `GetVideoRating(ctx, ids)` | `GET /videos/getRating` |
+| `ListSearch(ctx, params)` / `Search(ctx, params)` | `GET /search` |
+| `AnalyticsQuery(ctx, params)` | `GET /reports` (Analytics API; OAuth only) |
+
+Iterators (`IterVideosByChart`, `IterMyPlaylists`, `IterPlaylistItems`,
+`IterReplies`, `IterVideoThreads`, `IterMySubscriptions`, `IterSearchResults`)
+walk every page via a caller-supplied callback.
+
+### Write / manage (`*Client`, OAuth only)
+
+| Go method | YouTube endpoint | Protocol |
+|---|---|---|
+| `InsertVideo(ctx, params)` | `POST /upload/videos` | resumable, chunked |
+| `UpdateVideo` / `DeleteVideo` | `PUT` / `DELETE /videos` | JSON / query |
+| `RateVideo` / `ReportVideoAbuse` | `POST /videos/rate`, `/videos/reportAbuse` | query / JSON |
+| `UpdateChannel(ctx, body, parts)` | `PUT /channels` | JSON |
+| `Insert/Update/DeleteChannelSection` | `POST/PUT/DELETE /channelSections` | JSON / query |
+| `InsertChannelBanner(ctx, params)` | `POST /upload/channelBanners/insert` | binary media |
+| `Insert/Update/DeletePlaylist` | `POST/PUT/DELETE /playlists` | JSON / query |
+| `Insert/Update/DeletePlaylistItem` | `POST/PUT/DELETE /playlistItems` | JSON / query |
+| `InsertComment` / `UpdateComment` / `DeleteComment` | `POST/PUT/DELETE /comments` | JSON / query |
+| `SetCommentModerationStatus` | `POST /comments/setModerationStatus` | query |
+| `InsertCommentThread` | `POST /commentThreads` | JSON |
+| `InsertSubscription` / `DeleteSubscription` | `POST/DELETE /subscriptions` | JSON / query |
+| `InsertCaption` / `UpdateCaption` | `POST/PUT /upload/captions` | multipart / JSON |
+| `DeleteCaption` | `DELETE /captions` | query |
+| `SetThumbnail(ctx, params)` | `POST /upload/thumbnails/set` | binary media |
+| `SetWatermark` / `UnsetWatermark` | `POST /upload/watermarks/set`, `/watermarks/unset` | binary / query |
 
 For unauthenticated access to public data, supply `APIKey` instead of
 `AccessToken` in `ClientOptions`. Write, upload, and Analytics endpoints

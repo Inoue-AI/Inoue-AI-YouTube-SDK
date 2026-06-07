@@ -1,14 +1,37 @@
 // Package youtube provides a typed, context-aware Go client for the YouTube
-// Data API v3 and the YouTube Analytics API v2, at parity with the core
-// operations of the Inoue AI Python SDK.
+// Data API v3 and the YouTube Analytics API v2, at full parity with the Inoue
+// AI Python SDK.
 //
-// Core operations:
+// Operations are exposed as flat methods on *Client, named <Resource><Verb>:
 //
-//   - OAuth:      OAuthClient.RefreshAccessToken, ExchangeAuthorizationCode
-//   - Reads:      GetChannel, ListChannelVideos, GetVideo, Search,
-//     AnalyticsQuery
-//   - Publish:    InsertVideo (resumable upload), UpdateVideo, DeleteVideo,
-//     SetThumbnail
+//   - OAuth:           OAuthClient.RefreshAccessToken, ExchangeAuthorizationCode
+//   - Channels:        ListChannels, GetChannel, UpdateChannel, ListChannelVideos
+//   - Channel sections: ListChannelSections, InsertChannelSection,
+//     UpdateChannelSection, DeleteChannelSection
+//   - Channel banners: InsertChannelBanner, InsertChannelBannerFromFile
+//   - Videos:          ListVideos, GetVideo, InsertVideo (resumable upload),
+//     UpdateVideo, DeleteVideo, RateVideo, GetVideoRating, ReportVideoAbuse,
+//     IterVideosByChart
+//   - Playlists:       ListPlaylists, InsertPlaylist, UpdatePlaylist,
+//     DeletePlaylist, IterMyPlaylists
+//   - Playlist items:  ListPlaylistItems, InsertPlaylistItem,
+//     UpdatePlaylistItem, DeletePlaylistItem, IterPlaylistItems
+//   - Comments:        ListComments, InsertComment, UpdateComment,
+//     DeleteComment, SetCommentModerationStatus, IterReplies
+//   - Comment threads: ListCommentThreads, InsertCommentThread, IterVideoThreads
+//   - Subscriptions:   ListSubscriptions, InsertSubscription,
+//     DeleteSubscription, IterMySubscriptions
+//   - Captions:        ListCaptions, InsertCaption (multipart),
+//     InsertCaptionFromFile, UpdateCaption, DownloadCaption, DeleteCaption
+//   - Thumbnails:      SetThumbnail (binary upload)
+//   - Watermarks:      SetWatermark (binary upload), UnsetWatermark
+//   - Search:          ListSearch (full parameter set), Search (convenience),
+//     IterSearchResults
+//   - Analytics:       AnalyticsQuery
+//
+// Cursor-paginated endpoints expose both a single-page List method and an Iter
+// method that walks every page via a caller-supplied callback — the
+// Go-idiomatic equivalent of the Python async generators (iter_mine, etc.).
 //
 // The client is safe for concurrent use. It never falls back to
 // http.DefaultClient: each client owns an *http.Client with an explicit

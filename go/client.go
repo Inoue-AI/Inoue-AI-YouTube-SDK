@@ -275,6 +275,61 @@ func (c *Client) doDelete(ctx context.Context, path string, query url.Values) er
 	return c.do(req, http.MethodDelete, path, nil)
 }
 
+// doPostNoContent issues a POST with no request body (query-only) against the
+// data API, expecting a 204 No Content. Used by videos.rate,
+// comments.setModerationStatus, and watermarks.unset. Requires OAuth.
+func (c *Client) doPostNoContent(ctx context.Context, path string, query url.Values) error {
+	if err := c.requireOAuth(); err != nil {
+		return err
+	}
+	if query == nil {
+		query = url.Values{}
+	}
+	fullURL := c.baseURL + "/" + strings.TrimLeft(path, "/") + "?" + query.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, nil)
+	if err != nil {
+		return fmt.Errorf("youtube: build request: %w", err)
+	}
+	c.applyAuth(req, query)
+
+	return c.do(req, http.MethodPost, path, nil)
+}
+
+// doGetBinary issues a GET against the data API and returns the raw response
+// body. Used by captions.download. Either an OAuth token or an API key is
+// required.
+func (c *Client) doGetBinary(ctx context.Context, path string, query url.Values) ([]byte, error) {
+	if err := c.requireCredentials(); err != nil {
+		return nil, err
+	}
+	if query == nil {
+		query = url.Values{}
+	}
+	fullURL := c.baseURL + "/" + strings.TrimLeft(path, "/") + "?" + query.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("youtube: build request: %w", err)
+	}
+	c.applyAuth(req, query)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("youtube: %s %s: %w", http.MethodGet, path, err)
+	}
+	defer resp.Body.Close()
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("youtube: read response: %w", err)
+	}
+	if resp.StatusCode >= 400 {
+		return nil, parseErrorBody(resp.StatusCode, raw)
+	}
+	return raw, nil
+}
+
 // do issues req, reads the body, maps errors, and decodes JSON into out when
 // out is non-nil and the body is non-empty. The request context is already
 // attached via http.NewRequestWithContext at every call site.

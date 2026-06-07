@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"net/url"
 	"strconv"
 	"strings"
@@ -257,6 +259,100 @@ func (c *Client) uploadResumable(
 		Status:  "UPLOAD_INCOMPLETE",
 		Message: "upload finished without a final 200/201 response",
 	}
+}
+
+// uploadMultipart performs a multipart/related upload against the upload API:
+// a JSON "metadata" part followed by a binary "file" part. Used by
+// captions.insert / captions.update. The metadata is marshaled to JSON, and
+// the response is decoded into out. Requires OAuth.
+//
+// The wire format mirrors the Python SDK's aiohttp MultipartWriter("related")
+// implementation: a "multipart/related" envelope with a JSON part dispositioned
+// as form-data name="metadata" and the binary part as name="file".
+func (c *Client) uploadMultipart(
+	ctx context.Context,
+	path string,
+	query url.Values,
+	metadata any,
+	data []byte,
+	contentType string,
+	out any,
+) error {
+	if err := c.requireOAuth(); err != nil {
+		return err
+	}
+	if query == nil {
+		query = url.Values{}
+	}
+	query.Set("uploadType", "multipart")
+
+	encoded, err := json.Marshal(metadata)
+	if err != nil {
+		return fmt.Errorf("youtube: encode multipart metadata: %w", err)
+	}
+
+	var body bytes.Buffer
+	writer := multipart.NewWriter(&body)
+
+	metaHeader := textproto.MIMEHeader{}
+	metaHeader.Set("Content-Type", "application/json; charset=UTF-8")
+	metaHeader.Set("Content-Disposition", `form-data; name="metadata"`)
+	metaPart, err := writer.CreatePart(metaHeader)
+	if err != nil {
+		return fmt.Errorf("youtube: build metadata part: %w", err)
+	}
+	if _, err := metaPart.Write(encoded); err != nil {
+		return fmt.Errorf("youtube: write metadata part: %w", err)
+	}
+
+	fileHeader := textproto.MIMEHeader{}
+	fileHeader.Set("Content-Type", contentType)
+	fileHeader.Set("Content-Disposition", `form-data; name="file"`)
+	filePart, err := writer.CreatePart(fileHeader)
+	if err != nil {
+		return fmt.Errorf("youtube: build file part: %w", err)
+	}
+	if _, err := filePart.Write(data); err != nil {
+		return fmt.Errorf("youtube: write file part: %w", err)
+	}
+	if err := writer.Close(); err != nil {
+		return fmt.Errorf("youtube: finalize multipart body: %w", err)
+	}
+
+	fullURL := c.uploadBaseURL + "/" + strings.TrimLeft(path, "/") + "?" + query.Encode()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fullURL, bytes.NewReader(body.Bytes()))
+	if err != nil {
+		return fmt.Errorf("youtube: build multipart request: %w", err)
+	}
+	req.Header.Set("Content-Type", "multipart/related; boundary="+writer.Boundary())
+	req.Header.Set("Accept", "application/json")
+	c.applyAuth(req, query)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("youtube: multipart-upload request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	raw, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Errorf("youtube: read multipart-upload response: %w", err)
+	}
+	if resp.StatusCode >= 400 {
+		return parseErrorBody(resp.StatusCode, raw)
+	}
+	if out == nil || len(raw) == 0 {
+		return nil
+	}
+	if err := json.Unmarshal(raw, out); err != nil {
+		return &Error{
+			StatusCode: resp.StatusCode,
+			Status:     "INVALID_RESPONSE",
+			Message:    fmt.Sprintf("multipart upload returned non-JSON: %v", err),
+			Body:       raw,
+		}
+	}
+	return nil
 }
 
 // inferVideoParts derives the resource parts to request from the populated
